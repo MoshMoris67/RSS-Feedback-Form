@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Share feedback on the security services you received from RealStar Security — rate our officers, report incidents, and tell us what to improve.">
+<title>RealStar Security — Customer Feedback Form</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --navy:#152B45;
+    --steel:#2E5A87;
+    --red:#C8202F;
+    --gold:#C79A2E;
+    --paper:#F5F4EF;
+    --panel:#FFFFFF;
+    --ink:#20242A;
+    --muted:#5B6470;
+    --line:#D9DCE1;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.5;
+    padding:0 0 80px;
+  }
+
+  a{color:var(--steel);}
+
+  .masthead{
+    background:linear-gradient(135deg, var(--navy) 0%, #1a3454 100%);
+    color:#fff;
+    padding:32px 20px 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  .masthead::before{
+    content:'';
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background:radial-gradient(circle at 90% 20%, rgba(200,32,47,0.12) 0%, transparent 50%),
+               radial-gradient(circle at 10% 80%, rgba(199,154,46,0.08) 0%, transparent 50%);
+    pointer-events:none;
+  }
+  .masthead-inner{
+    max-width:760px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:24px 40px;
+    align-items:center;
+    position:relative;
+    z-index:1;
+  }
+  @media (max-width:640px){
+    .masthead-inner{grid-template-columns:1fr; text-align:center;}
+    .brand-mark{margin:0 auto;}
+    .masthead-contact{text-align:center;}
+  }
+  .brand-left{display:flex; flex-direction:column; gap:6px;}
+  .brand{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:32px;
+    letter-spacing:0.5px;
+    line-height:1;
+    margin:0;
+  }
+  .brand span{color:var(--red);}
+  .brand-mark{
+    height:72px;
+    width:auto;
+    display:block;
+  }
+  .brand-motto{
+    font-family:'Inter',sans-serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:13px;
+    color:var(--gold);
+    letter-spacing:0.2px;
+    margin:0;
+  }
+  .brand-right{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    text-align:right;
+  }
+  @media (max-width:640px){
+    .brand-right{text-align:center; align-items:center;}
+  }
+  .brand-sub{
+    font-size:12.5px;
+    color:#C4CEDA;
+    line-height:1.5;
+    margin:0;
+  }
+  .masthead-contact{
+    font-size:12.5px;
+    color:#C4CEDA;
+    line-height:1.6;
+  }
+  .masthead-contact a{color:#fff;text-decoration:none; font-weight:500;}
+  .masthead-contact a:hover{text-decoration:underline; color:var(--gold);}
+
+  .title-bar{
+    max-width:760px;
+    margin:36px auto 0;
+    padding:0 20px;
+  }
+  .title-bar h1{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0 0 6px;
+    color:var(--navy);
+  }
+  .title-bar p{
+    color:var(--muted);
+    margin:0;
+    font-size:15px;
+  }
+
+  form{
+    max-width:760px;
+    margin:28px auto 0;
+    padding:0 20px;
+  }
+
+  .section{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:5px solid var(--steel);
+    margin-bottom:22px;
+    padding:22px 24px 26px;
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .section-num{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    color:var(--steel);
+    border:1.5px solid var(--steel);
+    width:26px;
+    height:26px;
+    min-width:26px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .section-head h2{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:21px;
+    margin:0;
+    color:var(--navy);
+  }
+
+  label{
+    display:block;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--navy);
+    margin-bottom:6px;
+  }
+  .req{color:var(--red);}
+
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+
+  input[type=text], input[type=email], input[type=tel], input[type=date], textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    background:#FCFBF9;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    border-radius:2px;
+  }
+  input:focus, textarea:focus{
+    outline:2px solid var(--steel);
+    outline-offset:1px;
+    background:#fff;
+  }
+  textarea{min-height:70px; resize:vertical;}
+
+  .grid-2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px 18px;
+  }
+  @media (max-width:520px){ .grid-2{grid-template-columns:1fr;} }
+
+  /* Section 2 – checkbox chips */
+  .chip-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  @media (max-width:520px){ .chip-grid{grid-template-columns:1fr;} }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border:1px solid var(--line);
+    padding:10px 12px;
+    cursor:pointer;
+    font-size:14px;
+    background:#FCFBF9;
+  }
+  .chip input{width:16px;height:16px;accent-color:var(--steel);}
+  .chip.checked{
+    border-color:var(--steel);
+    background:#EAF1F8;
+  }
+  .chip-other{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .other-line{display:flex;align-items:center;gap:8px;}
+  .other-line input[type=text]{margin-top:0;}
+
+  /* Section 3 – rating table */
+  .rate-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .rate-table th{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:#fff;
+    background:var(--steel);
+    padding:8px 6px;
+    text-align:center;
+  }
+  .rate-table th:first-child{text-align:left; padding-left:10px;}
+  .rate-table td{
+    padding:10px 6px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+  }
+  .rate-table td:first-child{
+    text-align:left;
+    padding-left:10px;
+    font-weight:500;
+    color:var(--ink);
+  }
+  .rate-table tr:nth-child(even) td{background:#FAF9F6;}
+  .rate-table input[type=radio]{width:16px;height:16px;accent-color:var(--steel);}
+
+  /* Section 4 – yes/no rows */
+  .yn-row{
+    border-bottom:1px solid var(--line);
+    padding:14px 0;
+  }
+  .yn-row:last-child{border-bottom:none;}
+  .yn-question{
+    font-weight:600;
+    color:var(--navy);
+    font-size:14.5px;
+    margin-bottom:8px;
+  }
+  .yn-options{display:flex; gap:18px; margin-bottom:8px;}
+  .yn-options label{
+    display:flex; align-items:center; gap:6px;
+    font-weight:500; font-size:14px; color:var(--ink);
+    margin-bottom:0;
+  }
+  .yn-options input{width:16px;height:16px;accent-color:var(--red);}
+  .yn-explain{display:none;}
+  .yn-explain.show{display:block;}
+  .yn-explain textarea{min-height:50px;}
+
+  /* Section 6 – stars */
+  .stars{
+    display:flex;
+    gap:6px;
+    font-size:34px;
+    line-height:1;
+  }
+  .star{
+    cursor:pointer;
+    color:#D9DCE1;
+    transition:color .12s;
+  }
+  .star.filled{color:var(--gold);}
+  .star:focus-visible,
+  .chip:focus-within,
+  button:focus-visible{
+    outline:2px solid var(--steel);
+    outline-offset:2px;
+  }
+  .rating-label{
+    margin-top:6px;
+    font-size:13.5px;
+    color:var(--muted);
+    min-height:18px;
+  }
+
+  .declaration{
+    font-size:13.5px;
+    color:var(--muted);
+    font-style:italic;
+    border-top:1px dashed var(--line);
+    padding-top:14px;
+    margin-top:4px;
+  }
+
+  .submit-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:13px 26px;
+    border:none;
+    cursor:pointer;
+    border-radius:2px;
+  }
+  .btn-primary{
+    background:var(--red);
+    color:#fff;
+  }
+  .btn-primary:hover{background:#A81926;}
+  .btn-secondary{
+    background:transparent;
+    color:var(--navy);
+    border:1.5px solid var(--navy);
+  }
+  .btn-secondary:hover{background:var(--navy); color:#fff;}
+
+  .error-msg{
+    color:var(--red);
+    font-size:13px;
+    margin-top:8px;
+    display:none;
+  }
+  .error-msg.show{display:block;}
+
+  /* Summary / success view */
+  #summaryView{
+    max-width:760px;
+    margin:28px auto 0;
+    padding:0 20px;
+    display:none;
+  }
+  #summaryView.show{display:block;}
+  .summary-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:5px solid var(--red);
+    padding:26px 28px;
+  }
+  .summary-card h2{
+    font-family:'Barlow Condensed',sans-serif;
+    color:var(--navy);
+    font-size:26px;
+    margin-top:0;
+  }
+  #summaryText{
+    white-space:pre-wrap;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    background:#FAF9F6;
+    border:1px solid var(--line);
+    padding:16px;
+    max-height:420px;
+    overflow-y:auto;
+    color:var(--ink);
+  }
+  .summary-actions{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+
+  footer{
+    max-width:760px;
+    margin:34px auto 0;
+    padding:0 20px;
+    text-align:center;
+    font-size:12.5px;
+    color:var(--muted);
+  }
+
+  @media print{
+    .masthead, form, footer, .btn-secondary{display:none !important;}
+    #summaryView{display:block !important;}
+    body{padding:0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="brand-left">
+      <img class="brand-mark" src="logo.png" alt="RealStar Security logo">
+      <div class="brand-motto">The Real Stars in Security</div>
+    </div>
+    <div class="brand-right">
+      <div class="brand-sub">Commercial Security · Event Guarding · Industry & Mining · C.I.T & Private Investigations</div>
+      <div class="masthead-contact">
+      Block 288, Mbalwa, Namugongo Road, Kampala, Uganda<br>
+      <a href="mailto:tshumbanhete@realstarsec.com">tshumbanhete@realstarsec.com</a> · +256 746 771 854
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<div class="title-bar">
+  <h1>Customer Feedback Form</h1>
+  <p>Your experience helps us hold our officers and sites to a higher standard. Please take a few minutes to rate the service you received.</p>
+</div>
+
+<form id="feedbackForm">
+
+  <!-- SECTION 1 -->
+  <section class="section">
+    <div class="section-head"><div class="section-num">1</div><h2>Client Information</h2></div>
+    <div class="grid-2">
+      <div class="field">
+        <label for="fullName">Full Name <span class="req">*</span></label>
+        <input type="text" id="fullName" required>
+      </div>
+      <div class="field">
+        <label for="organization">Organization</label>
+        <input type="text" id="organization">
+      </div>
+      <div class="field">
+        <label for="phone">Phone Number <span class="req">*</span></label>
+        <input type="tel" id="phone" required>
+      </div>
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input type="email" id="email">
+      </div>
+      <div class="field" style="grid-column:1/-1;">
+        <label for="address">Physical Address</label>
+        <input type="text" id="address">
+      </div>
+      <div class="field">
+        <label for="feedbackDate">Date of Feedback <span class="req">*</span></label>
+        <input type="date" id="feedbackDate" required>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section class="section">
+    <div class="section-head"><div class="section-num">2</div><h2>Type of Service Received</h2></div>
+    <div class="chip-grid" id="serviceTypes">
+      <label class="chip"><input type="checkbox" value="Manned Guarding"> Manned Guarding</label>
+      <label class="chip"><input type="checkbox" value="Mobile Patrol"> Mobile Patrol</label>
+      <label class="chip"><input type="checkbox" value="CCTV / Monitoring"> CCTV / Monitoring</label>
+      <label class="chip"><input type="checkbox" value="Event Security"> Event Security</label>
+      <label class="chip"><input type="checkbox" value="Alarm Response"> Alarm Response</label>
+      <label class="chip"><input type="checkbox" value="Access Control"> Access Control</label>
+      <label class="chip"><input type="checkbox" value="K9 / Dog Unit"> K9 / Dog Unit</label>
+      <label class="chip chip-other">
+        <span class="other-line"><input type="checkbox" id="otherCheck"> Other (specify)</span>
+        <input type="text" id="otherText" placeholder="Please specify" style="margin-top:8px; display:none;">
+      </label>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section class="section">
+    <div class="section-head"><div class="section-num">3</div><h2>Service Quality Ratings</h2></div>
+    <div style="overflow-x:auto;">
+      <table class="rate-table" id="ratingTable">
+        <thead>
+          <tr><th scope="col">Evaluation criteria</th><th scope="col">Excellent</th><th scope="col">Good</th><th scope="col">Fair</th><th scope="col">Poor</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section class="section">
+    <div class="section-head"><div class="section-num">4</div><h2>Specific Service Questions</h2></div>
+    <div id="ynContainer"></div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section class="section">
+    <div class="section-head"><div class="section-num">5</div><h2>Comments, Commendations & Recommendations</h2></div>
+    <div class="field">
+      <label for="q_wellDone">What did we do well?</label>
+      <textarea id="q_wellDone"></textarea>
+    </div>
+    <div class="field">
+      <label for="q_improve">What areas need improvement?</label>
+      <textarea id="q_improve"></textarea>
+    </div>
+    <div class="field">
+      <label for="q_officer">Any specific officer to commend or report?</label>
+      <textarea id="q_officer"></textarea>
+    </div>
+    <div class="field">
+      <label for="q_additional">Additional comments or suggestions</label>
+      <textarea id="q_additional"></textarea>
+    </div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section class="section">
+    <div class="section-head"><div class="section-num">6</div><h2>Overall Satisfaction</h2></div>
+    <div class="field">
+      <label>Overall experience <span class="req">*</span></label>
+      <div class="stars" id="starRating" role="radiogroup" aria-required="true" aria-label="Overall experience, 1 to 5 stars">
+        <span class="star" data-value="1" role="radio" aria-checked="false" tabindex="0">★</span>
+        <span class="star" data-value="2" role="radio" aria-checked="false" tabindex="0">★</span>
+        <span class="star" data-value="3" role="radio" aria-checked="false" tabindex="0">★</span>
+        <span class="star" data-value="4" role="radio" aria-checked="false" tabindex="0">★</span>
+        <span class="star" data-value="5" role="radio" aria-checked="false" tabindex="0">★</span>
+      </div>
+      <div class="rating-label" id="ratingLabel" aria-live="polite"></div>
+    </div>
+    <div class="declaration">
+      By submitting this form, I confirm that the information provided above is accurate and given in good faith to assist RealStar Security Private Limited in improving its services.
+    </div>
+  </section>
+
+  <div class="error-msg" id="errorMsg" role="alert">Please fill in your name, phone number, date, and an overall rating before submitting.</div>
+
+  <div class="submit-row">
+    <button type="submit" class="btn-primary">Submit feedback</button>
+    <button type="button" class="btn-secondary" id="resetBtn">Clear form</button>
+  </div>
+</form>
+
+<div id="summaryView">
+  <div class="summary-card">
+    <h2>Thank you — feedback recorded</h2>
+    <p style="color:var(--muted); font-size:14px; margin-top:-8px;">
+      Your email app should have opened with this feedback addressed to RealStar Security. If it didn't open, copy the summary below or use the buttons to save/print it, then send it to
+      <a href="mailto:tshumbanhete@realstarsec.com">tshumbanhete@realstarsec.com</a> and
+      <a href="mailto:martha@realstarsec.com">martha@realstarsec.com</a>.
+    </p>
+    <div id="summaryText"></div>
+    <div class="error-msg" id="emailWarn" style="display:none; color:var(--red); margin-top:12px;">
+      The feedback is too long for the email body and may be truncated. Please use <strong>Copy summary to clipboard</strong> or <strong>Download as text file</strong> and paste it into your email manually.
+    </div>
+    <div class="summary-actions">
+      <button type="button" class="btn-primary" id="reopenEmailBtn">Open email again</button>
+      <button type="button" class="btn-secondary" id="printBtn">Print / save as PDF</button>
+      <button type="button" class="btn-secondary" id="downloadBtn">Download as text file</button>
+      <button type="button" class="btn-secondary" id="copyBtn">Copy summary to clipboard</button>
+      <button type="button" class="btn-secondary" id="newFormBtn">Start a new form</button>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  RealStar Security Private Limited · Kampala, Uganda · Head Office Marketing: Harare, Zimbabwe<br>
+  Operating in Zimbabwe, Uganda, Tanzania, Kenya, Zambia, Malawi, Mozambique & Dubai
+</footer>
+
+<script>
+  const CRITERIA = [
+    "Professionalism of Security Personnel",
+    "Punctuality & Reliability of Officers",
+    "Communication & Reporting",
+    "Knowledge of Security Procedures",
+    "Appearance & Uniform Compliance",
+    "Incident Response & Handling",
+    "Customer Service & Interaction",
+    "Adherence to Post Instructions",
+    "Equipment & Tools Readiness",
+    "Overall Service Delivery"
+  ];
+  const RATINGS = ["Excellent","Good","Fair","Poor"];
+
+  const ratingBody = document.querySelector('#ratingTable tbody');
+  CRITERIA.forEach((label, i) => {
+    const tr = document.createElement('tr');
+    let cells = `<td>${label}</td>`;
+    RATINGS.forEach(r => {
+      cells += `<td><label><input type="radio" name="rate_${i}" value="${r}" aria-label="${label}: ${r}"></label></td>`;
+    });
+    tr.innerHTML = cells;
+    ratingBody.appendChild(tr);
+  });
+
+  const YN_QUESTIONS = [
+    "Were security personnel properly briefed?",
+    "Were all incidents reported promptly?",
+    "Did officers follow your site regulations?",
+    "Were your concerns addressed quickly?",
+    "Were shift handovers handled professionally?",
+    "Would you renew / extend your contract?"
+  ];
+  const ynContainer = document.getElementById('ynContainer');
+  YN_QUESTIONS.forEach((q, i) => {
+    const row = document.createElement('div');
+    row.className = 'yn-row';
+    row.innerHTML = `
+      <div class="yn-question">${q}</div>
+      <div class="yn-options">
+        <label><input type="radio" name="yn_${i}" value="Yes"> Yes</label>
+        <label><input type="radio" name="yn_${i}" value="No"> No</label>
+      </div>
+      <div class="yn-explain" id="explainWrap_${i}">
+        <textarea id="explain_${i}" placeholder="Please explain"></textarea>
+      </div>
+    `;
+    ynContainer.appendChild(row);
+    row.querySelectorAll(`input[name="yn_${i}"]`).forEach(radio => {
+      radio.addEventListener('change', () => {
+        const wrap = document.getElementById(`explainWrap_${i}`);
+        wrap.classList.toggle('show', radio.value === 'No' && radio.checked);
+      });
+    });
+  });
+
+  // Other (specify) toggle
+  const otherCheck = document.getElementById('otherCheck');
+  const otherText = document.getElementById('otherText');
+  otherCheck.addEventListener('change', () => {
+    otherText.style.display = otherCheck.checked ? 'block' : 'none';
+    if (!otherCheck.checked) otherText.value = '';
+  });
+
+  document.querySelectorAll('.chip input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.chip').classList.toggle('checked', cb.checked);
+    });
+  });
+
+  // Star rating
+  let starValue = 0;
+  const starLabels = {1:"★ Poor",2:"★★ Fair",3:"★★★ Average",4:"★★★★ Good",5:"★★★★★ Excellent"};
+  const stars = document.querySelectorAll('#starRating .star');
+  const ratingLabel = document.getElementById('ratingLabel');
+  function selectStar(star){
+    starValue = parseInt(star.dataset.value);
+    stars.forEach(s => {
+      const v = parseInt(s.dataset.value);
+      s.classList.toggle('filled', v <= starValue);
+      s.setAttribute('aria-checked', v === starValue ? 'true' : 'false');
+    });
+    ratingLabel.textContent = starLabels[starValue];
+  }
+  stars.forEach(star => {
+    star.addEventListener('click', () => selectStar(star));
+    star.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectStar(star);
+      }
+    });
+  });
+
+  function buildSummary(){
+    const val = id => document.getElementById(id).value.trim();
+    const services = Array.from(document.querySelectorAll('#serviceTypes input[type=checkbox]:checked'))
+      .map(cb => cb.value).filter(v => v !== undefined);
+    if (otherCheck.checked && otherText.value.trim()) services.push(`Other: ${otherText.value.trim()}`);
+
+    let lines = [];
+    lines.push("REALSTAR SECURITY — CUSTOMER FEEDBACK FORM");
+    lines.push("=".repeat(44));
+    lines.push("");
+    lines.push("SECTION 1: CLIENT INFORMATION");
+    lines.push(`Full Name: ${val('fullName')}`);
+    lines.push(`Organization: ${val('organization')}`);
+    lines.push(`Phone Number: ${val('phone')}`);
+    lines.push(`Email Address: ${val('email')}`);
+    lines.push(`Physical Address: ${val('address')}`);
+    lines.push(`Date of Feedback: ${val('feedbackDate')}`);
+    lines.push("");
+    lines.push("SECTION 2: TYPE OF SERVICE RECEIVED");
+    lines.push(services.length ? services.join(", ") : "(none selected)");
+    lines.push("");
+    lines.push("SECTION 3: SERVICE QUALITY RATINGS");
+    CRITERIA.forEach((c, i) => {
+      const checked = document.querySelector(`input[name="rate_${i}"]:checked`);
+      lines.push(`- ${c}: ${checked ? checked.value : "(not rated)"}`);
+    });
+    lines.push("");
+    lines.push("SECTION 4: SPECIFIC SERVICE QUESTIONS");
+    YN_QUESTIONS.forEach((q, i) => {
+      const checked = document.querySelector(`input[name="yn_${i}"]:checked`);
+      const answer = checked ? checked.value : "(not answered)";
+      let line = `- ${q} ${answer}`;
+      if (answer === "No") {
+        const explain = document.getElementById(`explain_${i}`).value.trim();
+        if (explain) line += ` — ${explain}`;
+      }
+      lines.push(line);
+    });
+    lines.push("");
+    lines.push("SECTION 5: COMMENTS, COMMENDATIONS & RECOMMENDATIONS");
+    lines.push(`What did we do well? ${val('q_wellDone') || "(none)"}`);
+    lines.push(`What areas need improvement? ${val('q_improve') || "(none)"}`);
+    lines.push(`Officer to commend or report: ${val('q_officer') || "(none)"}`);
+    lines.push(`Additional comments: ${val('q_additional') || "(none)"}`);
+    lines.push("");
+    lines.push("SECTION 6: OVERALL SATISFACTION");
+    lines.push(`Overall experience: ${starValue ? starLabels[starValue] : "(not rated)"}`);
+    lines.push("");
+    lines.push("I confirm that the information provided above is accurate and given in good faith to assist RealStar Security Private Limited in improving its services.");
+    return lines.join("\n");
+  }
+
+  function openEmail(summary){
+    const name = document.getElementById('fullName').value.trim() || "Customer";
+    const subject = `Customer Feedback — ${name}`;
+    const to = "tshumbanhete@realstarsec.com";
+    const cc = "martha@realstarsec.com";
+    const body = encodeURIComponent(summary);
+    window.location.href = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${body}`;
+  }
+
+  let lastSummary = "";
+
+  document.getElementById('feedbackForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('fullName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const date = document.getElementById('feedbackDate').value;
+    const errorMsg = document.getElementById('errorMsg');
+
+    if (!name || !phone || !date || !starValue) {
+      errorMsg.classList.add('show');
+      return;
+    }
+    errorMsg.classList.remove('show');
+
+    lastSummary = buildSummary();
+    document.getElementById('summaryText').textContent = lastSummary;
+    const emailWarn = document.getElementById('emailWarn');
+    if (lastSummary.length > 800) {
+      emailWarn.classList.add('show');
+    } else {
+      emailWarn.classList.remove('show');
+    }
+    document.getElementById('feedbackForm').style.display = 'none';
+    document.getElementById('summaryView').classList.add('show');
+    window.scrollTo({top:0, behavior:'smooth'});
+    openEmail(lastSummary);
+  });
+
+  document.getElementById('reopenEmailBtn').addEventListener('click', () => openEmail(lastSummary));
+
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    const blob = new Blob([lastSummary], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = document.getElementById('fullName').value.trim().replace(/\s+/g,'_') || 'feedback';
+    a.href = url;
+    a.download = `RealStar_Feedback_${name}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(lastSummary);
+      const btn = document.getElementById('copyBtn');
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = original, 1500);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  });
+
+  document.getElementById('newFormBtn').addEventListener('click', () => {
+    document.getElementById('feedbackForm').reset();
+    document.getElementById('feedbackForm').style.display = 'block';
+    document.getElementById('summaryView').classList.remove('show');
+    stars.forEach(s => { s.classList.remove('filled'); s.setAttribute('aria-checked','false'); });
+    starValue = 0;
+    ratingLabel.textContent = '';
+    document.querySelectorAll('.yn-explain').forEach(el => el.classList.remove('show'));
+    otherText.style.display = 'none';
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    stars.forEach(s => { s.classList.remove('filled'); s.setAttribute('aria-checked','false'); });
+    starValue = 0;
+    ratingLabel.textContent = '';
+    document.querySelectorAll('.yn-explain').forEach(el => el.classList.remove('show'));
+    otherText.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>

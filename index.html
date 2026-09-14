@@ -805,11 +805,13 @@
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => {
+    document.getElementById('feedbackForm').reset();
     stars.forEach(s => { s.classList.remove('filled'); s.setAttribute('aria-checked','false'); });
     starValue = 0;
     ratingLabel.textContent = '';
     document.querySelectorAll('.yn-explain').forEach(el => el.classList.remove('show'));
     otherText.style.display = 'none';
+    document.getElementById('errorMsg').classList.remove('show');
   });
 </script>
 

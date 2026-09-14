@@ -7,6 +7,8 @@
 <title>RealStar Security — Customer Feedback Form</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap');
 
@@ -553,18 +555,21 @@
 
 <div id="summaryView">
   <div class="summary-card">
-    <h2>Thank you — feedback recorded</h2>
-    <p style="color:var(--muted); font-size:14px; margin-top:-8px;">
-      Your email app should have opened with this feedback addressed to RealStar Security. If it didn't open, copy the summary below or use the buttons to save/print it, then send it to
-      <a href="mailto:tshumbanhete@realstarsec.com">tshumbanhete@realstarsec.com</a> and
-      <a href="mailto:martha@realstarsec.com">martha@realstarsec.com</a>.
+    <h2 id="summaryHeading">Sending your feedback…</h2>
+    <p id="summaryStatus" style="color:var(--muted); font-size:14px; margin-top:-8px;">
+      Generating your feedback PDF and sending it to RealStar Security. This only takes a moment.
     </p>
+    <div class="error-msg" id="sendError" style="display:none; color:var(--red); margin-bottom:14px;">
+      We couldn't automatically send this to RealStar Security (this can happen if you're offline). Your PDF has been downloaded to your device instead — please email it as an attachment to
+      <a href="mailto:tshumbanhete@realstarsec.com">tshumbanhete@realstarsec.com</a>, or use <strong>Open email again</strong> below as a backup.
+    </div>
     <div id="summaryText"></div>
     <div class="error-msg" id="emailWarn" style="display:none; color:var(--red); margin-top:12px;">
       The feedback is too long for the email body and may be truncated. Please use <strong>Copy summary to clipboard</strong> or <strong>Download as text file</strong> and paste it into your email manually.
     </div>
     <div class="summary-actions">
-      <button type="button" class="btn-primary" id="reopenEmailBtn">Open email again</button>
+      <button type="button" class="btn-primary" id="downloadPdfBtn" style="display:none;">Download PDF copy</button>
+      <button type="button" class="btn-secondary" id="reopenEmailBtn" style="display:none;">Open email again</button>
       <button type="button" class="btn-secondary" id="printBtn">Print / save as PDF</button>
       <button type="button" class="btn-secondary" id="downloadBtn">Download as text file</button>
       <button type="button" class="btn-secondary" id="copyBtn">Copy summary to clipboard</button>
@@ -579,6 +584,8 @@
   RealStar Security Private Limited · Kampala, Uganda · Head Office Marketing: Harare, Zimbabwe<br>
   Operating in Zimbabwe, Uganda, Tanzania, Kenya, Zambia, Malawi, Mozambique & Dubai
 </footer>
+
+<iframe name="formsubmit-target" id="formsubmit-target" style="display:none;" title="Form submission target"></iframe>
 
 <script>
   const CRITERIA = [
@@ -736,12 +743,297 @@
     window.location.href = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${body}`;
   }
 
-  let lastSummary = "";
+  // Load the logo as base64 so it can be embedded directly into the PDF
+  async function fetchLogoBase64(){
+    try {
+      const resp = await fetch('logo.png');
+      const blob = await resp.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.error('Could not load logo for PDF:', err);
+      return null;
+    }
+  }
 
-  document.getElementById('feedbackForm').addEventListener('submit', function(e){
+  // Build a branded PDF that mirrors the official RealStar Security feedback form
+  async function generateFeedbackPDF(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    const contentW = pageW - margin * 2;
+    let y = 14;
+
+    const NAVY = [21, 43, 69];
+    const STEEL = [46, 90, 135];
+    const RED = [200, 32, 47];
+    const GOLD = [199, 154, 46];
+    const LIGHT = [245, 244, 239];
+
+    const val = id => document.getElementById(id).value.trim();
+
+    // Header: logo + company info
+    const logoData = await fetchLogoBase64();
+    if (logoData) {
+      try { doc.addImage(logoData, 'PNG', margin, y - 2, 40, 19.3); } catch (e) { console.error(e); }
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text('RealStar Security Pvt Limited', pageW - margin, y + 2, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(90, 90, 90);
+    const headerLines = [
+      'Block 288, Mbalwa, Namugongo Road, Kampala, Uganda',
+      'tshumbanhete@realstarsec.com · +256 746 771 854',
+      'www.realstarsec.com'
+    ];
+    headerLines.forEach((line, i) => doc.text(line, pageW - margin, y + 6 + i * 4, { align: 'right' }));
+
+    y += 26;
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.6);
+    doc.line(margin, y, pageW - margin, y);
+    y += 10;
+
+    doc.setFont('helvetica', 'bolditalic');
+    doc.setFontSize(17);
+    doc.setTextColor(...STEEL);
+    doc.text('CUSTOMER FEEDBACK FORM', pageW / 2, y, { align: 'center' });
+    y += 10;
+
+    // Helper: section header bar
+    function sectionHeader(title){
+      if (y > 265) { doc.addPage(); y = 16; }
+      doc.setFillColor(...STEEL);
+      doc.rect(margin, y, contentW, 7, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(255, 255, 255);
+      doc.text(title, margin + 3, y + 5);
+      y += 11;
+    }
+
+    // Helper: label/value row
+    function fieldRow(label, value){
+      if (y > 275) { doc.addPage(); y = 16; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...NAVY);
+      doc.text(label, margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(30, 30, 30);
+      const lines = doc.splitTextToSize(value || '—', contentW - 55);
+      doc.text(lines, margin + 55, y);
+      y += Math.max(6, lines.length * 5);
+    }
+
+    // Helper: wrapped paragraph block
+    function paragraphBlock(label, value){
+      if (y > 265) { doc.addPage(); y = 16; }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...NAVY);
+      doc.text(label, margin, y);
+      y += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      doc.setTextColor(30, 30, 30);
+      const lines = doc.splitTextToSize(value && value.trim() ? value.trim() : '(none provided)', contentW - 4);
+      if (y + lines.length * 5 > 280) { doc.addPage(); y = 16; }
+      doc.text(lines, margin + 2, y);
+      y += lines.length * 5 + 5;
+    }
+
+    // SECTION 1
+    sectionHeader('SECTION 1: CLIENT INFORMATION');
+    fieldRow('Full Name:', val('fullName'));
+    fieldRow('Organization:', val('organization'));
+    fieldRow('Phone Number:', val('phone'));
+    fieldRow('Email Address:', val('email'));
+    fieldRow('Physical Address:', val('address'));
+    fieldRow('Date of Feedback:', val('feedbackDate'));
+    y += 3;
+
+    // SECTION 2
+    sectionHeader('SECTION 2: TYPE OF SERVICE RECEIVED');
+    const services = Array.from(document.querySelectorAll('#serviceTypes input[type=checkbox]:checked'))
+      .map(cb => cb.value).filter(v => v !== undefined);
+    if (otherCheck.checked && otherText.value.trim()) services.push(`Other: ${otherText.value.trim()}`);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 30, 30);
+    const servicesText = services.length ? services.join('  ·  ') : 'None selected';
+    const servLines = doc.splitTextToSize(servicesText, contentW - 4);
+    doc.text(servLines, margin + 2, y);
+    y += servLines.length * 5 + 5;
+
+    // SECTION 3 — ratings table via autotable
+    sectionHeader('SECTION 3: SERVICE QUALITY RATINGS');
+    const ratingRows = CRITERIA.map((c, i) => {
+      const checked = document.querySelector(`input[name="rate_${i}"]:checked`);
+      const ans = checked ? checked.value : '—';
+      return [c, ans === 'Excellent' ? 'X' : '', ans === 'Good' ? 'X' : '', ans === 'Fair' ? 'X' : '', ans === 'Poor' ? 'X' : ''];
+    });
+    doc.autoTable({
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Evaluation Criteria', 'Excellent', 'Good', 'Fair', 'Poor']],
+      body: ratingRows,
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 2, valign: 'middle' },
+      headStyles: { fillColor: STEEL, textColor: 255, halign: 'center' },
+      columnStyles: {
+        0: { cellWidth: contentW - 88, halign: 'left' },
+        1: { cellWidth: 22, halign: 'center' }, 2: { cellWidth: 22, halign: 'center' },
+        3: { cellWidth: 22, halign: 'center' }, 4: { cellWidth: 22, halign: 'center' }
+      }
+    });
+    y = doc.lastAutoTable.finalY + 9;
+
+    // SECTION 4 — yes/no table
+    sectionHeader('SECTION 4: SPECIFIC SERVICE QUESTIONS');
+    const ynRows = YN_QUESTIONS.map((q, i) => {
+      const checked = document.querySelector(`input[name="yn_${i}"]:checked`);
+      const answer = checked ? checked.value : '—';
+      const explain = answer === 'No' ? document.getElementById(`explain_${i}`).value.trim() : '';
+      return [q, answer, explain || '—'];
+    });
+    doc.autoTable({
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Question', 'Answer', 'If No, explanation']],
+      body: ynRows,
+      theme: 'grid',
+      styles: { fontSize: 8.5, cellPadding: 2, valign: 'top' },
+      headStyles: { fillColor: STEEL, textColor: 255 },
+      columnStyles: { 0: { cellWidth: 65 }, 1: { cellWidth: 18, halign: 'center' }, 2: { cellWidth: contentW - 83 } }
+    });
+    y = doc.lastAutoTable.finalY + 9;
+
+    // SECTION 5
+    sectionHeader('SECTION 5: COMMENTS, COMMENDATIONS & RECOMMENDATIONS');
+    paragraphBlock('What did we do well?', val('q_wellDone'));
+    paragraphBlock('What areas need improvement?', val('q_improve'));
+    paragraphBlock('Any specific officer to commend or report?', val('q_officer'));
+    paragraphBlock('Additional comments or suggestions:', val('q_additional'));
+
+    // SECTION 6
+    sectionHeader('SECTION 6: OVERALL SATISFACTION');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(...NAVY);
+    doc.text('Overall Experience:', margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...GOLD);
+    doc.text(starValue ? starLabels[starValue] : '(not rated)', margin + 45, y);
+    y += 9;
+
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineDashPattern([1, 1], 0);
+    doc.line(margin, y, pageW - margin, y);
+    doc.setLineDashPattern([], 0);
+    y += 6;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8.5);
+    doc.setTextColor(90, 90, 90);
+    const declLines = doc.splitTextToSize(
+      'I confirm that the information provided above is accurate and given in good faith to assist RealStar Security Private Limited in improving its services.',
+      contentW
+    );
+    doc.text(declLines, margin, y);
+    y += declLines.length * 4.5 + 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Submitted electronically via RealStar Security online feedback form on ${new Date().toLocaleString()}.`, margin, y);
+
+    return doc;
+  }
+
+  let lastSummary = "";
+  let lastPdfBlob = null;
+  let lastPdfFilename = "RealStar_Feedback.pdf";
+
+  function setSummaryStatus(state, message){
+    const heading = document.getElementById('summaryHeading');
+    const status = document.getElementById('summaryStatus');
+    const sendError = document.getElementById('sendError');
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    const reopenEmailBtn = document.getElementById('reopenEmailBtn');
+    if (state === 'sending') {
+      heading.textContent = 'Sending your feedback…';
+      status.textContent = message || 'Generating your feedback PDF and sending it to RealStar Security.';
+      sendError.classList.remove('show'); sendError.style.display = 'none';
+    } else if (state === 'submitted') {
+      heading.textContent = 'Thank you — feedback submitted';
+      status.textContent = 'Your feedback PDF has been sent to RealStar Security. If you gave your email address, a confirmation should arrive shortly. You can also keep a copy below.';
+      sendError.style.display = 'none';
+      downloadPdfBtn.style.display = 'inline-block';
+      reopenEmailBtn.style.display = 'inline-block';
+    } else if (state === 'error') {
+      heading.textContent = 'Feedback saved — sending needs a retry';
+      status.textContent = 'Your responses were not lost. See the note below.';
+      sendError.style.display = 'block';
+      downloadPdfBtn.style.display = 'inline-block';
+      reopenEmailBtn.style.display = 'inline-block';
+    }
+  }
+
+  // Submit through FormSubmit's classic endpoint via a hidden iframe, so the
+  // customer never leaves the page, and the autoresponse feature (which
+  // FormSubmit disables on its AJAX/JSON endpoint) can fire.
+  function submitViaHiddenIframe(pdfBlob, filename, fields){
+    return new Promise((resolve) => {
+      const iframe = document.getElementById('formsubmit-target');
+      let settled = false;
+      const finish = () => { if (!settled) { settled = true; resolve(); } };
+
+      iframe.addEventListener('load', finish, { once: true });
+      // Safety timeout in case the load event doesn't fire in some browsers
+      setTimeout(finish, 9000);
+
+      const form = document.createElement('form');
+      form.action = 'https://formsubmit.co/tshumbanhete@realstarsec.com';
+      form.method = 'POST';
+      form.enctype = 'multipart/form-data';
+      form.target = 'formsubmit-target';
+      form.style.display = 'none';
+
+      Object.entries(fields).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.name = 'attachment';
+      const dt = new DataTransfer();
+      dt.items.add(new File([pdfBlob], filename, { type: 'application/pdf' }));
+      fileInput.files = dt.files;
+      form.appendChild(fileInput);
+
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(() => form.remove(), 1000);
+    });
+  }
+
+  document.getElementById('feedbackForm').addEventListener('submit', async function(e){
     e.preventDefault();
     const name = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
     const date = document.getElementById('feedbackDate').value;
     const errorMsg = document.getElementById('errorMsg');
 
@@ -753,19 +1045,55 @@
 
     lastSummary = buildSummary();
     document.getElementById('summaryText').textContent = lastSummary;
-    const emailWarn = document.getElementById('emailWarn');
-    if (lastSummary.length > 800) {
-      emailWarn.classList.add('show');
-    } else {
-      emailWarn.classList.remove('show');
-    }
+    document.getElementById('emailWarn').classList.remove('show');
+
     document.getElementById('feedbackForm').style.display = 'none';
     document.getElementById('summaryView').classList.add('show');
+    setSummaryStatus('sending');
     window.scrollTo({top:0, behavior:'smooth'});
-    openEmail(lastSummary);
+
+    lastPdfFilename = `RealStar_Feedback_${name.replace(/\s+/g,'_') || 'Customer'}.pdf`;
+
+    try {
+      const doc = await generateFeedbackPDF();
+      lastPdfBlob = doc.output('blob');
+
+      const fields = {
+        name, phone, email,
+        _subject: `Customer Feedback — ${name}`,
+        _cc: 'martha@realstarsec.com',
+        _template: 'table',
+        _captcha: 'false',
+        _honey: '',
+        message: `New customer feedback submitted by ${name}. Full details are in the attached PDF.`
+      };
+      if (email) {
+        fields._autoresponse = `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`;
+      }
+
+      await submitViaHiddenIframe(lastPdfBlob, lastPdfFilename, fields);
+      setSummaryStatus('submitted');
+    } catch (err) {
+      console.error('Feedback send failed:', err);
+      if (lastPdfBlob) {
+        const url = URL.createObjectURL(lastPdfBlob);
+        const a = document.createElement('a');
+        a.href = url; a.download = lastPdfFilename; a.click();
+        URL.revokeObjectURL(url);
+      }
+      setSummaryStatus('error');
+    }
   });
 
   document.getElementById('reopenEmailBtn').addEventListener('click', () => openEmail(lastSummary));
+
+  document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+    if (!lastPdfBlob) return;
+    const url = URL.createObjectURL(lastPdfBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = lastPdfFilename; a.click();
+    URL.revokeObjectURL(url);
+  });
 
   document.getElementById('printBtn').addEventListener('click', () => window.print());
 
@@ -796,6 +1124,10 @@
     document.getElementById('feedbackForm').reset();
     document.getElementById('feedbackForm').style.display = 'block';
     document.getElementById('summaryView').classList.remove('show');
+    document.getElementById('downloadPdfBtn').style.display = 'none';
+    document.getElementById('reopenEmailBtn').style.display = 'none';
+    document.getElementById('sendError').style.display = 'none';
+    lastPdfBlob = null;
     stars.forEach(s => { s.classList.remove('filled'); s.setAttribute('aria-checked','false'); });
     starValue = 0;
     ratingLabel.textContent = '';
@@ -805,13 +1137,11 @@
   });
 
   document.getElementById('resetBtn').addEventListener('click', () => {
-    document.getElementById('feedbackForm').reset();
     stars.forEach(s => { s.classList.remove('filled'); s.setAttribute('aria-checked','false'); });
     starValue = 0;
     ratingLabel.textContent = '';
     document.querySelectorAll('.yn-explain').forEach(el => el.classList.remove('show'));
     otherText.style.display = 'none';
-    document.getElementById('errorMsg').classList.remove('show');
   });
 </script>
 

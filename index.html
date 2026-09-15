@@ -394,6 +394,46 @@
     margin-top:18px;
   }
 
+  /* PDF preview / confirm view */
+  #previewView{
+    max-width:820px;
+    margin:28px auto 0;
+    padding:0 20px;
+    display:none;
+  }
+  #previewView.show{display:block;}
+  .preview-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-top:5px solid var(--steel);
+    padding:26px 28px;
+  }
+  .preview-card h2{
+    font-family:'Barlow Condensed',sans-serif;
+    color:var(--navy);
+    font-size:26px;
+    margin-top:0;
+  }
+  .preview-frame-wrap{
+    border:1px solid var(--line);
+    background:#525659;
+    height:65vh;
+    min-height:360px;
+  }
+  #pdfPreviewFrame{
+    width:100%;
+    height:100%;
+    border:0;
+  }
+  .preview-fallback{
+    display:none;
+    text-align:center;
+    padding:40px 20px;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .preview-fallback.show{display:block;}
+
   footer{
     max-width:760px;
     margin:34px auto 0;
@@ -552,6 +592,26 @@
     <button type="button" class="btn-secondary" id="resetBtn">Clear form</button>
   </div>
 </form>
+
+<div id="previewView">
+  <div class="preview-card">
+    <h2>Review your feedback</h2>
+    <p style="color:var(--muted); font-size:14px; margin-top:-8px;">
+      Please check that everything below is correct. This is exactly what RealStar Security will receive.
+    </p>
+    <div class="preview-frame-wrap">
+      <iframe id="pdfPreviewFrame" title="Feedback PDF preview"></iframe>
+      <div class="preview-fallback" id="previewFallback">
+        Your browser can't preview PDFs inline here.
+        <br><a href="#" id="previewFallbackLink" target="_blank" rel="noopener">Tap to open the PDF in a new tab</a> to review it.
+      </div>
+    </div>
+    <div class="summary-actions">
+      <button type="button" class="btn-primary" id="confirmSendBtn">Confirm &amp; send</button>
+      <button type="button" class="btn-secondary" id="backEditBtn">Go back &amp; edit</button>
+    </div>
+  </div>
+</div>
 
 <div id="summaryView">
   <div class="summary-card">
@@ -970,7 +1030,7 @@
     const reopenEmailBtn = document.getElementById('reopenEmailBtn');
     if (state === 'sending') {
       heading.textContent = 'Sending your feedback…';
-      status.textContent = message || 'Generating your feedback PDF and sending it to RealStar Security.';
+      status.textContent = message || 'Sending your feedback PDF to RealStar Security.';
       sendError.classList.remove('show'); sendError.style.display = 'none';
     } else if (state === 'submitted') {
       heading.textContent = 'Thank you — feedback submitted';
@@ -987,53 +1047,63 @@
     }
   }
 
-  // Submit through FormSubmit's classic endpoint via a hidden iframe, so the
-  // customer never leaves the page, and the autoresponse feature (which
-  // FormSubmit disables on its AJAX/JSON endpoint) can fire.
-  function submitViaHiddenIframe(pdfBlob, filename, fields){
-    return new Promise((resolve) => {
-      const iframe = document.getElementById('formsubmit-target');
-      let settled = false;
-      const finish = () => { if (!settled) { settled = true; resolve(); } };
-
-      iframe.addEventListener('load', finish, { once: true });
-      // Safety timeout in case the load event doesn't fire in some browsers
-      setTimeout(finish, 9000);
-
-      const form = document.createElement('form');
-      form.action = 'https://formsubmit.co/tshumbanhete@realstarsec.com';
-      form.method = 'POST';
-      form.enctype = 'multipart/form-data';
-      form.target = 'formsubmit-target';
-      form.style.display = 'none';
-
-      Object.entries(fields).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
-      });
-
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.name = 'attachment';
-      const dt = new DataTransfer();
-      dt.items.add(new File([pdfBlob], filename, { type: 'application/pdf' }));
-      fileInput.files = dt.files;
-      form.appendChild(fileInput);
-
-      document.body.appendChild(form);
-      form.submit();
-      setTimeout(() => form.remove(), 1000);
+  // Fire-and-forget: trigger FormSubmit's autoresponse to the customer via a
+  // hidden iframe classic POST. Kept separate (and minimal — no attachment)
+  // from the main business notification so it never blocks or risks that send.
+  function sendAutoresponse(name, email){
+    if (!email) return;
+    const iframe = document.getElementById('formsubmit-target');
+    const form = document.createElement('form');
+    form.action = 'https://formsubmit.co/tshumbanhete@realstarsec.com';
+    form.method = 'POST';
+    form.target = 'formsubmit-target';
+    form.style.display = 'none';
+    const fields = {
+      name, email,
+      _subject: 'Thanks for your feedback',
+      _autoresponse: `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`,
+      _captcha: 'false',
+      _honey: ''
+    };
+    Object.entries(fields).forEach(([key, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = key; input.value = value;
+      form.appendChild(input);
     });
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => form.remove(), 1000);
   }
+
+  // Business notification: FormSubmit's AJAX/JSON endpoint, which reliably
+  // uses the "name" field as the sender display name (unlike the classic
+  // endpoint used above, which is needed only for the autoresponse feature).
+  async function sendBusinessNotification(pdfBlob, filename, name, phone, email){
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('phone', phone);
+    fd.append('email', email);
+    fd.append('_subject', `Customer Feedback — ${name}`);
+    fd.append('_cc', 'martha@realstarsec.com');
+    fd.append('_template', 'table');
+    fd.append('message', `New customer feedback submitted by ${name}. Full details are in the attached PDF.`);
+    fd.append('attachment', pdfBlob, filename);
+
+    const resp = await fetch('https://formsubmit.co/ajax/tshumbanhete@realstarsec.com', {
+      method: 'POST',
+      body: fd,
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!resp.ok) throw new Error(`FormSubmit responded with ${resp.status}`);
+    await resp.json();
+  }
+
+  let pdfPreviewUrl = null;
 
   document.getElementById('feedbackForm').addEventListener('submit', async function(e){
     e.preventDefault();
     const name = document.getElementById('fullName').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
     const date = document.getElementById('feedbackDate').value;
     const errorMsg = document.getElementById('errorMsg');
 
@@ -1044,34 +1114,50 @@
     errorMsg.classList.remove('show');
 
     lastSummary = buildSummary();
+    lastPdfFilename = `RealStar_Feedback_${name.replace(/\s+/g,'_') || 'Customer'}.pdf`;
+
+    const doc = await generateFeedbackPDF();
+    lastPdfBlob = doc.output('blob');
+    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
+    pdfPreviewUrl = URL.createObjectURL(lastPdfBlob);
+
+    const frame = document.getElementById('pdfPreviewFrame');
+    const fallback = document.getElementById('previewFallback');
+    const fallbackLink = document.getElementById('previewFallbackLink');
+    fallback.classList.remove('show');
+    fallbackLink.href = pdfPreviewUrl;
+    frame.src = pdfPreviewUrl;
+    // Some mobile browsers silently fail to render PDFs in an iframe; show a
+    // fallback "open in new tab" link if nothing has rendered shortly after.
+    frame.onerror = () => fallback.classList.add('show');
+
+    document.getElementById('feedbackForm').style.display = 'none';
+    document.getElementById('previewView').classList.add('show');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  document.getElementById('backEditBtn').addEventListener('click', () => {
+    document.getElementById('previewView').classList.remove('show');
+    document.getElementById('feedbackForm').style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  document.getElementById('confirmSendBtn').addEventListener('click', async () => {
+    const name = document.getElementById('fullName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+
     document.getElementById('summaryText').textContent = lastSummary;
     document.getElementById('emailWarn').classList.remove('show');
 
-    document.getElementById('feedbackForm').style.display = 'none';
+    document.getElementById('previewView').classList.remove('show');
     document.getElementById('summaryView').classList.add('show');
     setSummaryStatus('sending');
     window.scrollTo({top:0, behavior:'smooth'});
 
-    lastPdfFilename = `RealStar_Feedback_${name.replace(/\s+/g,'_') || 'Customer'}.pdf`;
-
     try {
-      const doc = await generateFeedbackPDF();
-      lastPdfBlob = doc.output('blob');
-
-      const fields = {
-        name, phone, email,
-        _subject: `Customer Feedback — ${name}`,
-        _cc: 'martha@realstarsec.com',
-        _template: 'table',
-        _captcha: 'false',
-        _honey: '',
-        message: `New customer feedback submitted by ${name}. Full details are in the attached PDF.`
-      };
-      if (email) {
-        fields._autoresponse = `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`;
-      }
-
-      await submitViaHiddenIframe(lastPdfBlob, lastPdfFilename, fields);
+      await sendBusinessNotification(lastPdfBlob, lastPdfFilename, name, phone, email);
+      sendAutoresponse(name, email);
       setSummaryStatus('submitted');
     } catch (err) {
       console.error('Feedback send failed:', err);
@@ -1123,10 +1209,13 @@
   document.getElementById('newFormBtn').addEventListener('click', () => {
     document.getElementById('feedbackForm').reset();
     document.getElementById('feedbackForm').style.display = 'block';
+    document.getElementById('previewView').classList.remove('show');
     document.getElementById('summaryView').classList.remove('show');
     document.getElementById('downloadPdfBtn').style.display = 'none';
     document.getElementById('reopenEmailBtn').style.display = 'none';
     document.getElementById('sendError').style.display = 'none';
+    if (pdfPreviewUrl) { URL.revokeObjectURL(pdfPreviewUrl); pdfPreviewUrl = null; }
+    document.getElementById('pdfPreviewFrame').src = '';
     lastPdfBlob = null;
     stars.forEach(s => { s.classList.remove('filled'); s.setAttribute('aria-checked','false'); });
     starValue = 0;

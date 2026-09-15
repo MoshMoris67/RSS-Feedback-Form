@@ -1047,55 +1047,55 @@
     }
   }
 
-  // Fire-and-forget: trigger FormSubmit's autoresponse to the customer via a
-  // hidden iframe classic POST. Kept separate (and minimal — no attachment)
-  // from the main business notification so it never blocks or risks that send.
-  function sendAutoresponse(name, email){
-    if (!email) return;
-    const iframe = document.getElementById('formsubmit-target');
-    const form = document.createElement('form');
-    form.action = 'https://formsubmit.co/tshumbanhete@realstarsec.com';
-    form.method = 'POST';
-    form.target = 'formsubmit-target';
-    form.style.display = 'none';
-    const fields = {
-      name, email,
-      _subject: 'Thanks for your feedback',
-      _autoresponse: `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`,
-      _captcha: 'false',
-      _honey: ''
-    };
-    Object.entries(fields).forEach(([key, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden'; input.name = key; input.value = value;
-      form.appendChild(input);
-    });
-    document.body.appendChild(form);
-    form.submit();
-    setTimeout(() => form.remove(), 1000);
-  }
+  // Submit through FormSubmit's classic endpoint via a hidden iframe. This is
+  // the only endpoint that reliably delivers file attachments — their AJAX/
+  // JSON endpoint silently drops them, which is why this single submission
+  // carries both the PDF attachment and the customer autoresponse together.
+  function submitFeedback(pdfBlob, filename, name, phone, email){
+    return new Promise((resolve) => {
+      const iframe = document.getElementById('formsubmit-target');
+      let settled = false;
+      const finish = () => { if (!settled) { settled = true; resolve(); } };
+      iframe.addEventListener('load', finish, { once: true });
+      setTimeout(finish, 9000); // safety timeout in case load doesn't fire
 
-  // Business notification: FormSubmit's AJAX/JSON endpoint, which reliably
-  // uses the "name" field as the sender display name (unlike the classic
-  // endpoint used above, which is needed only for the autoresponse feature).
-  async function sendBusinessNotification(pdfBlob, filename, name, phone, email){
-    const fd = new FormData();
-    fd.append('name', name);
-    fd.append('phone', phone);
-    fd.append('email', email);
-    fd.append('_subject', `Customer Feedback — ${name}`);
-    fd.append('_cc', 'martha@realstarsec.com');
-    fd.append('_template', 'table');
-    fd.append('message', `New customer feedback submitted by ${name}. Full details are in the attached PDF.`);
-    fd.append('attachment', pdfBlob, filename);
+      const form = document.createElement('form');
+      form.action = 'https://formsubmit.co/tshumbanhete@realstarsec.com';
+      form.method = 'POST';
+      form.enctype = 'multipart/form-data';
+      form.target = 'formsubmit-target';
+      form.style.display = 'none';
 
-    const resp = await fetch('https://formsubmit.co/ajax/tshumbanhete@realstarsec.com', {
-      method: 'POST',
-      body: fd,
-      headers: { 'Accept': 'application/json' }
+      const fields = {
+        name, phone, email,
+        _subject: `Customer Feedback — ${name}`,
+        _cc: 'martha@realstarsec.com',
+        _template: 'table',
+        _captcha: 'false',
+        _honey: '',
+        message: `New customer feedback submitted by ${name}. Full details are in the attached PDF.`
+      };
+      if (email) {
+        fields._autoresponse = `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`;
+      }
+      Object.entries(fields).forEach(([key, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = key; input.value = value;
+        form.appendChild(input);
+      });
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.name = 'attachment';
+      const dt = new DataTransfer();
+      dt.items.add(new File([pdfBlob], filename, { type: 'application/pdf' }));
+      fileInput.files = dt.files;
+      form.appendChild(fileInput);
+
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(() => form.remove(), 1000);
     });
-    if (!resp.ok) throw new Error(`FormSubmit responded with ${resp.status}`);
-    await resp.json();
   }
 
   let pdfPreviewUrl = null;
@@ -1156,8 +1156,7 @@
     window.scrollTo({top:0, behavior:'smooth'});
 
     try {
-      await sendBusinessNotification(lastPdfBlob, lastPdfFilename, name, phone, email);
-      sendAutoresponse(name, email);
+      await submitFeedback(lastPdfBlob, lastPdfFilename, name, phone, email);
       setSummaryStatus('submitted');
     } catch (err) {
       console.error('Feedback send failed:', err);

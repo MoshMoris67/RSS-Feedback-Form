@@ -462,7 +462,7 @@
       <div class="brand-sub">Commercial Security · Event Guarding · Industry & Mining · C.I.T & Private Investigations</div>
       <div class="masthead-contact">
       Block 288, Mbalwa, Namugongo Road, Kampala, Uganda<br>
-      <a href="mailto:tshumbanhete@realstarsec.com">tshumbanhete@realstarsec.com</a> · +256 746 771 854
+      <a href="mailto:enquiriesug@realstarsec.com">enquiriesug@realstarsec.com</a> · +256 788 794 354
       </div>
     </div>
   </div>
@@ -621,7 +621,7 @@
     </p>
     <div class="error-msg" id="sendError" style="display:none; color:var(--red); margin-bottom:14px;">
       We couldn't automatically send this to RealStar Security (this can happen if you're offline). Your PDF has been downloaded to your device instead — please email it as an attachment to
-      <a href="mailto:tshumbanhete@realstarsec.com">tshumbanhete@realstarsec.com</a>, or use <strong>Open email again</strong> below as a backup.
+      <a href="mailto:enquiriesug@realstarsec.com">enquiriesug@realstarsec.com</a>, or use <strong>Open email again</strong> below as a backup.
     </div>
     <div id="summaryText"></div>
     <div class="error-msg" id="emailWarn" style="display:none; color:var(--red); margin-top:12px;">
@@ -797,8 +797,8 @@
   function openEmail(summary){
     const name = document.getElementById('fullName').value.trim() || "Customer";
     const subject = `Customer Feedback — ${name}`;
-    const to = "tshumbanhete@realstarsec.com";
-    const cc = "martha@realstarsec.com";
+    const to = "enquiriesug@realstarsec.com";
+    const cc = "operationsug@realstarsec.com";
     const body = encodeURIComponent(summary);
     window.location.href = `mailto:${to}?cc=${encodeURIComponent(cc)}&subject=${encodeURIComponent(subject)}&body=${body}`;
   }
@@ -851,7 +851,7 @@
     doc.setTextColor(90, 90, 90);
     const headerLines = [
       'Block 288, Mbalwa, Namugongo Road, Kampala, Uganda',
-      'tshumbanhete@realstarsec.com · +256 746 771 854',
+      'enquiriesug@realstarsec.com · +256 788 794 354',
       'www.realstarsec.com'
     ];
     headerLines.forEach((line, i) => doc.text(line, pageW - margin, y + 6 + i * 4, { align: 'right' }));
@@ -866,7 +866,56 @@
     doc.setFontSize(17);
     doc.setTextColor(...STEEL);
     doc.text('CUSTOMER FEEDBACK FORM', pageW / 2, y, { align: 'center' });
-    y += 10;
+    y += 8;
+
+    // Document control block (QMS traceability metadata)
+    const DOC_CONTROL = [
+      ['Document Code', 'RSL-IMS-CF-F-02', 'Supporting Procedure', 'RSS-IMS-PR-24'],
+      ['Revision', '01', 'Effective Date', '01.01.2025'],
+      ['Document Owner', 'IMS Manager', 'Status', 'Controlled Form']
+    ];
+    const dcColW = contentW / 4;
+    const dcRowH = 7;
+    doc.setFontSize(8.5);
+    DOC_CONTROL.forEach((row, r) => {
+      row.forEach((cell, c) => {
+        const cx = margin + c * dcColW;
+        const cy = y + r * dcRowH;
+        const isLabel = (c % 2 === 0);
+        doc.setDrawColor(190, 190, 190);
+        doc.setLineWidth(0.2);
+        if (isLabel) {
+          doc.setFillColor(...STEEL);
+          doc.rect(cx, cy, dcColW, dcRowH, 'FD');
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+        } else {
+          doc.setFillColor(255, 255, 255);
+          doc.rect(cx, cy, dcColW, dcRowH, 'FD');
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(30, 30, 30);
+        }
+        doc.text(cell, cx + 3, cy + dcRowH / 2 + 1.5);
+      });
+    });
+    y += DOC_CONTROL.length * dcRowH + 9;
+
+    // Footer stamp on every page: Document Code · Revision · Status
+    function drawDocControlFooter(){
+      const pageCount = doc.internal.getNumberOfPages();
+      const pageH = doc.internal.pageSize.getHeight();
+      for (let p = 1; p <= pageCount; p++) {
+        doc.setPage(p);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(120, 120, 120);
+        doc.text(
+          `Document Code: RSL-IMS-CF-F-02  ·  Revision: 01  ·  Status: Controlled Form`,
+          margin, pageH - 8
+        );
+        doc.text(`Page ${p} of ${pageCount}`, pageW - margin, pageH - 8, { align: 'right' });
+      }
+    }
 
     // Helper: section header bar
     function sectionHeader(title){
@@ -1015,6 +1064,7 @@
     doc.setTextColor(120, 120, 120);
     doc.text(`Submitted electronically via RealStar Security online feedback form on ${new Date().toLocaleString()}.`, margin, y);
 
+    drawDocControlFooter();
     return doc;
   }
 
@@ -1060,7 +1110,7 @@
       setTimeout(finish, 9000); // safety timeout in case load doesn't fire
 
       const form = document.createElement('form');
-      form.action = 'https://formsubmit.co/tshumbanhete@realstarsec.com';
+      form.action = 'https://formsubmit.co/enquiriesug@realstarsec.com';
       form.method = 'POST';
       form.enctype = 'multipart/form-data';
       form.target = 'formsubmit-target';
@@ -1069,7 +1119,7 @@
       const fields = {
         name, phone, email,
         _subject: `Customer Feedback — ${name}`,
-        _cc: 'martha@realstarsec.com',
+        _cc: 'operationsug@realstarsec.com',
         _template: 'table',
         _captcha: 'false',
         _honey: '',

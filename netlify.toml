@@ -1,3 +1,9 @@
 [build]
   publish = "."
   functions = "netlify/functions"
+
+# SMTP_USER is the public enquiries mailbox address, which is intentionally
+# shown on the page and used as the default recipient, so it is not a secret.
+# SMTP_PASS stays scanned.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SMTP_USER"

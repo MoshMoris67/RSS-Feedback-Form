@@ -4,6 +4,10 @@
 
 # SMTP_USER is the public enquiries mailbox address, which is intentionally
 # shown on the page and used as the default recipient, so it is not a secret.
-# SMTP_PASS stays scanned.
+#
+# The SMTP_PASS value is a substring of that same public address, so the
+# scanner flags the address text in the two files below. Skip only those files;
+# SMTP_PASS is still scanned everywhere else.
 [build.environment]
   SECRETS_SCAN_OMIT_KEYS = "SMTP_USER"
+  SECRETS_SCAN_OMIT_PATHS = "index.html,netlify/functions/send-feedback.js"

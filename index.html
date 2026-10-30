@@ -645,7 +645,6 @@
   Operating in Zimbabwe, Uganda, Tanzania, Kenya, Zambia, Malawi, Mozambique & Dubai
 </footer>
 
-<iframe name="formsubmit-target" id="formsubmit-target" style="display:none;" title="Form submission target"></iframe>
 
 <script>
   const CRITERIA = [
@@ -1097,55 +1096,29 @@
     }
   }
 
-  // Submit through FormSubmit's classic endpoint via a hidden iframe. This is
-  // the only endpoint that reliably delivers file attachments — their AJAX/
-  // JSON endpoint silently drops them, which is why this single submission
-  // carries both the PDF attachment and the customer autoresponse together.
-  function submitFeedback(pdfBlob, filename, name, phone, email){
-    return new Promise((resolve) => {
-      const iframe = document.getElementById('formsubmit-target');
-      let settled = false;
-      const finish = () => { if (!settled) { settled = true; resolve(); } };
-      iframe.addEventListener('load', finish, { once: true });
-      setTimeout(finish, 9000); // safety timeout in case load doesn't fire
-
-      const form = document.createElement('form');
-      form.action = 'https://formsubmit.co/enquiriesug@realstarsec.com';
-      form.method = 'POST';
-      form.enctype = 'multipart/form-data';
-      form.target = 'formsubmit-target';
-      form.style.display = 'none';
-
-      const fields = {
-        name, phone, email,
-        _subject: `Customer Feedback — ${name}`,
-        _cc: 'operationsug@realstarsec.com',
-        _template: 'table',
-        _captcha: 'false',
-        _honey: '',
-        message: `New customer feedback submitted by ${name}. Full details are in the attached PDF.`
-      };
-      if (email) {
-        fields._autoresponse = `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`;
-      }
-      Object.entries(fields).forEach(([key, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden'; input.name = key; input.value = value;
-        form.appendChild(input);
-      });
-
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.name = 'attachment';
-      const dt = new DataTransfer();
-      dt.items.add(new File([pdfBlob], filename, { type: 'application/pdf' }));
-      fileInput.files = dt.files;
-      form.appendChild(fileInput);
-
-      document.body.appendChild(form);
-      form.submit();
-      setTimeout(() => form.remove(), 1000);
+  // Send the PDF to our own Netlify Function, which emails it via the company
+  // mailbox. Rejects on any failure so the page can show the retry screen.
+  function blobToBase64(blob){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1]);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
     });
+  }
+
+  async function submitFeedback(pdfBlob, filename, name, phone, email){
+    const pdfBase64 = await blobToBase64(pdfBlob);
+    const resp = await fetch('/.netlify/functions/send-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, email, filename, pdfBase64 })
+    });
+    let result = null;
+    try { result = await resp.json(); } catch (e) {}
+    if (!resp.ok || !result || !result.ok) {
+      throw new Error((result && result.error) || `Send failed (${resp.status})`);
+    }
   }
 
   let pdfPreviewUrl = null;

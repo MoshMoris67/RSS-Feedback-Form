@@ -53,7 +53,7 @@ exports.handler = async (event) => {
   const cc = process.env.MAIL_CC || 'operationsug@realstarsec.com';
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"RealStar Feedback Form" <${SMTP_USER}>`,
       to,
       cc,
@@ -65,6 +65,9 @@ exports.handler = async (event) => {
 <p>Full details are in the attached PDF.</p>`,
       attachments: [{ filename, content: pdf, contentType: 'application/pdf' }]
     });
+    console.log('Business notification sent:', JSON.stringify({
+      accepted: info.accepted, rejected: info.rejected, response: info.response, messageId: info.messageId
+    }));
   } catch (err) {
     console.error('Business notification failed:', err);
     return json(502, { ok: false, error: 'Could not send email' });
@@ -73,13 +76,16 @@ exports.handler = async (event) => {
   // Customer autoresponse is best-effort: the business copy already went out.
   if (validEmail) {
     try {
-      await transporter.sendMail({
+      const reply = await transporter.sendMail({
         from: `"RealStar Security" <${SMTP_USER}>`,
         to: email,
         replyTo: to,
         subject: 'Thank you for your feedback — RealStar Security',
         text: `Thank you, ${name} — we've received your feedback for RealStar Security and appreciate you taking the time to share it. Our team will review it shortly. If you have anything further to add, just reply to this email.`
       });
+      console.log('Autoresponse sent:', JSON.stringify({
+        accepted: reply.accepted, rejected: reply.rejected, response: reply.response, messageId: reply.messageId
+      }));
     } catch (err) {
       console.error('Autoresponse failed:', err);
     }

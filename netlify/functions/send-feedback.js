@@ -21,7 +21,10 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return json(405, { ok: false, error: 'Method not allowed' });
 
-  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env;
+  // Trim: a stray space/newline pasted into the Netlify UI causes a 535.
+  const SMTP_HOST = (process.env.SMTP_HOST || '').trim();
+  const SMTP_USER = (process.env.SMTP_USER || '').trim();
+  const SMTP_PASS = (process.env.SMTP_PASS || '').trim();
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
     console.error('Missing SMTP_HOST / SMTP_USER / SMTP_PASS environment variables');
     return json(500, { ok: false, error: 'Mail server not configured' });
@@ -70,6 +73,12 @@ exports.handler = async (event) => {
     }));
   } catch (err) {
     console.error('Business notification failed:', err);
+    // Safe diagnostic for auth failures: shows what was received, never the password itself.
+    console.error('SMTP config seen:', JSON.stringify({
+      host: SMTP_HOST, user: SMTP_USER, port,
+      passLength: SMTP_PASS.length,
+      rawPassLength: (process.env.SMTP_PASS || '').length
+    }));
     return json(502, { ok: false, error: 'Could not send email' });
   }
 

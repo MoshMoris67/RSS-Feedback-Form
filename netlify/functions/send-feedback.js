@@ -4,6 +4,7 @@
 // Required Netlify environment variables:
 //   SMTP_HOST, SMTP_USER, SMTP_PASS
 // Optional: SMTP_PORT (default 465), MAIL_TO, MAIL_CC
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 const MAX_PDF_BYTES = 4 * 1024 * 1024;
@@ -77,7 +78,8 @@ exports.handler = async (event) => {
     console.error('SMTP config seen:', JSON.stringify({
       host: SMTP_HOST, user: SMTP_USER, port,
       passLength: SMTP_PASS.length,
-      rawPassLength: (process.env.SMTP_PASS || '').length
+      rawPassLength: (process.env.SMTP_PASS || '').length,
+      passFingerprint: crypto.createHash('sha256').update(SMTP_PASS).digest('hex').slice(0, 8)
     }));
     return json(502, { ok: false, error: 'Could not send email' });
   }
